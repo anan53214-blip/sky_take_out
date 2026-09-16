@@ -3,7 +3,9 @@ package com.sky.service;
 import com.sky.dto.SetmealDTO;
 import com.sky.dto.SetmealPageQueryDTO;
 import com.sky.result.PageResult;
+import com.sky.vo.SetmealVO;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
@@ -31,9 +33,16 @@ public interface SetmealService {
     void delete(List<Long> ids);
 
     /**
-     * 修改套餐信息
-     * @param setmealDTO
+     * 根据id查询套餐
+     * @param id
      * @return
      */
-    void update(SetmealDTO setmealDTO);
+    SetmealVO getByIdWithDish(Long id);
+
+//    /**
+//     * 修改套餐信息
+//     * @param setmealDTO
+//     * @return
+//     */
+//    void update(SetmealDTO setmealDTO);
 }

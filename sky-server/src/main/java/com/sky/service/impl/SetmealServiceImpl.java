@@ -18,8 +18,10 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -87,12 +89,35 @@ public class SetmealServiceImpl implements SetmealService {
     }
 
     /**
-     * 修改套餐信息
-     * @param setmealDTO
+     * 根据id查询套餐
+     * @param id
      * @return
      */
-    public void update(SetmealDTO setmealDTO) {
-        //
+    public SetmealVO getByIdWithDish(Long id) {
+        //套餐表查询套餐信息
+        Setmeal setmeal = setmealMapper.getById(id);
+        //套餐菜品表查询菜品信息
+        List<SetmealDish> setmealDishes=setmealDishMapper.getById(id);
+        if(setmeal != null && setmealDishes != null){
+            SetmealVO setmealVO=new SetmealVO();
+            BeanUtils.copyProperties(setmeal,setmealVO);
+            setmealVO.setSetmealDishes(setmealDishes);
+            return setmealVO;
+        }
+        return null;
     }
+
+//    /**
+//     * 修改套餐信息
+//     * @param setmealDTO
+//     * @return
+//     */
+//    public void update(SetmealDTO setmealDTO) {
+//        Setmeal setmeal=new Setmeal();
+//        BeanUtils.copyProperties(setmealDTO,setmeal);
+//        //修改套餐表
+//        setmealMapper.update(setmeal);
+//
+//    }
 
 }
