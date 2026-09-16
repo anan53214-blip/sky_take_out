@@ -52,7 +52,7 @@
             <if test="image != null">
                 image = #{image},
             </if>
-            updatete_time = #{updateTime},
+            update_time = #{updateTime},
             update_user = #{updateUser}
          </set>
         where id = #{id}

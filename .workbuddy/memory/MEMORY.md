@@ -12,3 +12,9 @@
 - Mapper 批量删除统一签名 `deleteByIds(List<Long> ids)`，XML 为 `delete from setmeal_dish where setmeal_id in (...)`。
   - **单条删除复用批量方法**，传单元素集合（`Collections.singletonList(id)`），不新建 `deleteById` 之类的方法。
 - Service 层 `BeanUtils.copyProperties(dto, entity)` + `mapper.update(entity)` 是标准更新套路。
+
+## @AutoFill 公共字段填充约定
+- mapper 接口方法加 `@AutoFill(OperationType.UPDATE/INSERT)` → AOP 前置通知自动反射填 entity 公共字段：
+  - UPDATE：仅 `updateTime`(LocalDateTime.now())、`updateUser`(BaseContext.getCurrentId())。
+  - INSERT：外加 `createTime`、`createUser`。
+- 注意：(1) 注解必须加在 **mapper 接口方法**上（切点 `execution(* com.sky.mapper.*.*(..)) && @annotation(...)`），加在 service 方法上不触发；(2) XML 的 update/insert 必须**无条件**写 `update_time = #{updateTime}, update_user = #{updateUser}` 等列，否则 AOP 填的值落不了库——前端不传这些字段，由 AOP 补；(3) 时间类型(LocalDateTime)/数值类型(Long)字段**禁止 `!= ''` 比较**，会抛 MyBatis OGNL `invalid comparison` 报错，只判 `!= null` 或不判。
