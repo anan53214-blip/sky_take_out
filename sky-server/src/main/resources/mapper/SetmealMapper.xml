@@ -7,4 +7,20 @@
         insert into setmeal (category_id, name, price, status, id, description, image, create_time, update_time, create_user, update_user)
         values (#{categoryId}, #{name}, #{price}, #{status}, #{id}, #{description}, #{image}, #{createTime}, #{updateTime}, #{createUser}, #{updateUser})
     </insert>
+
+    <select id="pageQuery" resultType="com.sky.vo.SetmealVO">
+        select s.*, c.name as categoryName  from setmeal s left outer join category c on  s.category_id =c.id
+        <where>
+        <if test="categoryId != null">
+            and s.category_id = #{categoryId}
+        </if>
+        <if test="name != null and name != ''">
+            and s.name like concat("%",#{name},"%")
+        </if>
+        <if test="status != null">
+            and s.status = #{status}
+        </if>
+        </where>
+        order by s.update_time desc
+    </select>
 </mapper>
