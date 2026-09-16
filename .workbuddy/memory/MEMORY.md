@@ -1,5 +1,10 @@
 # 项目长期记忆 — sky-take-out（苍穹外卖）
 
+## 项目定位 / 目录关系
+- `D:\program\sky-take-out` = 用户正在练手的后端项目（苍穹外卖，黑马教程）。
+- `D:\program\sky-take-out-info` = 教程指南 / 参考答案（含按天的文档与参考实现），用于对照已完成进度、找 bug、查规范。
+- 概念：按天对照——用户完成某天任务后，用 info 里的当天参考实现对比其实际代码（逻辑/语法/规范/bug）。分析时不改用户代码，只给结论与建议。
+
 ## 构建 / 环境
 - Maven 多模块：`sky-common` / `sky-pojo` / `sky-server`，父 pom 继承 `spring-boot-starter-parent 2.7.3`。
 - **Java 语言级别 = 1.8**（父 pom 默认值，项目内未覆盖 `java.version`；已编译 class 校验为 major 52）。
