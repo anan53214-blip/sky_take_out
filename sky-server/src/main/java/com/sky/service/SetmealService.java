@@ -29,4 +29,11 @@ public interface SetmealService {
      * @return
      */
     void delete(List<Long> ids);
+
+    /**
+     * 修改套餐信息
+     * @param setmealDTO
+     * @return
+     */
+    void update(SetmealDTO setmealDTO);
 }

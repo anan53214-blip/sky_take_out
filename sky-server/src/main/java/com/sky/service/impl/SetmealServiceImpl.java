@@ -11,12 +11,14 @@ import com.sky.exception.DeletionNotAllowedException;
 import com.sky.mapper.SetmealDishMapper;
 import com.sky.mapper.SetmealMapper;
 import com.sky.result.PageResult;
+import com.sky.result.Result;
 import com.sky.service.SetmealService;
 import com.sky.vo.SetmealVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 import java.util.Set;
@@ -80,6 +82,17 @@ public class SetmealServiceImpl implements SetmealService {
             }
         }
         setmealMapper.deleteByIds(ids);
+        setmealDishMapper.deleteByIds(ids);
         return ;
     }
+
+    /**
+     * 修改套餐信息
+     * @param setmealDTO
+     * @return
+     */
+    public void update(SetmealDTO setmealDTO) {
+        //
+    }
+
 }
