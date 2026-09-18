@@ -13,6 +13,12 @@
   - 如需升级：在根 pom `<properties>` 加 `<java.version>11</java.version>`（Spring Boot 父 pom 会据此设置 compiler source/target），但教程项目原基于 8，升级前评估兼容性。
 - MySQL 客户端：`/d/mySQL/file/bin/mysql`（非 PATH，需全路径）；库 `sky_take_out`，root / pjq20021202.（见 `application-dev.yml`）。
 
+## Redis 配置
+- Redis 装在 `D:\redis`（Windows 版）。启动须带配置文件：`redis-server.exe redis.windows.conf`，双击 exe 会用默认 6379 且忽略 conf。
+- 项目 `application-dev.yml` 的 redis：`host=localhost`、`port=6379`、`password=pjq20021202.`、`database=10`（通过 `application.yml` 里 `sky.redis.*` 占位符引用）。
+- 坑：配了 password 但 redis 未设 requirepass → 连接时报 "Client sent AUTH, but no password is set"；两者必须一致。
+- 坑：Spring Boot 测试类必须带 `@SpringBootTest`，否则 IOC 容器不启动，`@Autowired` 字段为 null（用户曾把 `@SpringBootTest` 注释掉导致 NPE）。
+
 ## 代码约定
 - Mapper 批量删除统一签名 `deleteByIds(List<Long> ids)`，XML 为 `delete from setmeal_dish where setmeal_id in (...)`。
   - **单条删除复用批量方法**，传单元素集合（`Collections.singletonList(id)`），不新建 `deleteById` 之类的方法。
