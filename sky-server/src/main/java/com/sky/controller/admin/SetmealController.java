@@ -10,10 +10,14 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/admin/setmeal")
@@ -24,6 +28,8 @@ public class SetmealController {
     @Autowired
     private SetmealService setmealService;
 
+    @Autowired
+    private RedisTemplate redisTemplate;
     /**
      * 新增套餐
      * @param setmealDTO
@@ -31,9 +37,11 @@ public class SetmealController {
      */
     @PostMapping
     @ApiOperation("新增套餐接口")
+    @Cacheable(cacheNames = "setmealCache", key = "#setmealDTO.categoryId") //key:setmealCache::100
     public Result save(@RequestBody SetmealDTO setmealDTO) {
         log.info("新增套餐:{}",setmealDTO);
         setmealService.insert(setmealDTO);
+        cleanCache("setmealCache*");
         return Result.success();
     }
 
@@ -57,9 +65,11 @@ public class SetmealController {
      */
     @DeleteMapping
     @ApiOperation("批量删除套餐接口")
+    @CacheEvict(cacheNames = "setmealCache",allEntries = true) //key:setmealCache::100
     public Result delele(@RequestParam List<Long> ids){
         log.info("批量删除套餐:{}",ids);
         setmealService.delete(ids);
+        cleanCache("setmealCache*");
         return Result.success();
     }
 
@@ -86,6 +96,7 @@ public class SetmealController {
     public Result update(@RequestBody SetmealDTO setmealDTO){
         log.info("修改套餐信息:{}",setmealDTO);
         setmealService.update(setmealDTO);
+        cleanCache("setmealCache::"+setmealDTO.getCategoryId());
         return Result.success();
     }
 
@@ -98,6 +109,12 @@ public class SetmealController {
     public Result setStatus(@PathVariable Integer status,Long id){
         log.info("套餐起售停售:id为:{},状态为:{}",id,status);
         setmealService.setStatus(id,status);
+        cleanCache("setmealCache*");
         return Result.success();
+    }
+
+    private void cleanCache(String pattern){
+        Set keys = redisTemplate.keys(pattern);
+        redisTemplate.delete(keys);
     }
 }
