@@ -3,6 +3,7 @@ package com.sky.mapper;
 import com.sky.entity.ShoppingCart;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
@@ -31,4 +32,7 @@ public interface ShoppingCartMapper {
     @Insert("insert into shopping_cart(user_id, dish_id, setmeal_id, name, image, amount, number, create_time,dish_flavor) " +
             "values(#{userId}, #{dishId}, #{setmealId}, #{name}, #{image}, #{amount}, #{number}, #{createTime},#{dishFlavor})")
     void insert(ShoppingCart shoppingCart);
+
+    @Select("select * from shopping_cart where user_id = #{userId} order by create_time asc")
+    List<ShoppingCart> getById(Long userId);
 }
