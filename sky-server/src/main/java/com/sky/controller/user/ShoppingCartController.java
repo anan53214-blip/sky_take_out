@@ -45,4 +45,15 @@ public class ShoppingCartController {
         List<ShoppingCart> list = shoppingCartService.showList();
         return Result.success(list);
     }
+
+    /**
+     * 清空购物车
+     */
+    @DeleteMapping("/clean")
+    @ApiOperation("清空购物车接口")
+    public Result clean(){
+        log.info("清空购物车");
+        shoppingCartService.clean();
+        return Result.success();
+    }
 }
