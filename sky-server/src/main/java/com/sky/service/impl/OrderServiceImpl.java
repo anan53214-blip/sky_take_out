@@ -1,25 +1,26 @@
 package com.sky.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
+import com.sky.dto.OrdersPaymentDTO;
 import com.sky.dto.OrdersSubmitDTO;
-import com.sky.entity.AddressBook;
-import com.sky.entity.OrderDetail;
-import com.sky.entity.Orders;
-import com.sky.entity.ShoppingCart;
+import com.sky.entity.*;
 import com.sky.exception.AddressBookBusinessException;
+import com.sky.exception.OrderBusinessException;
 import com.sky.exception.ShoppingCartBusinessException;
-import com.sky.mapper.AddressBookMapper;
-import com.sky.mapper.OrderDetailMapper;
-import com.sky.mapper.OrderMapper;
-import com.sky.mapper.ShoppingCartMapper;
+import com.sky.mapper.*;
 import com.sky.service.OrderService;
+import com.sky.utils.WeChatPayUtil;
+import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderSubmitVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +36,13 @@ public class OrderServiceImpl implements OrderService {
     private ShoppingCartMapper shoppingCartMapper;
     @Autowired
     private AddressBookMapper addressBookMapper;
+    @Autowired
+    private UserMapper userMapper;
+    @Autowired
+    private WeChatPayUtil weChatPayUtil;
+
+    @Value("${sky.payment.mock-enabled:false}")
+    private boolean mockPaymentEnabled;
 
     /**
      *用户下单
@@ -70,6 +78,7 @@ public class OrderServiceImpl implements OrderService {
             OrderDetail orderDetail = new OrderDetail();
             BeanUtils.copyProperties(cart, orderDetail);
             orderDetail.setOrderId(orders.getId());
+            orderDetailList.add(orderDetail);
         }
 
         orderDetailMapper.insertBatch(orderDetailList);
@@ -85,4 +94,84 @@ public class OrderServiceImpl implements OrderService {
 
         return orderSubmitVO;
     }
+
+    /**
+     * 订单支付
+     *
+     * @param ordersPaymentDTO
+     * @return
+     */
+    public OrderPaymentVO payment(OrdersPaymentDTO ordersPaymentDTO) throws Exception {
+        // 本地学习使用：模拟支付成功，沿用原有的支付成功业务处理。
+        if (mockPaymentEnabled) {
+            if (ordersPaymentDTO.getOrderNumber() == null || ordersPaymentDTO.getOrderNumber().trim().isEmpty()) {
+                throw new OrderBusinessException("订单号不能为空");
+            }
+            Orders orders = orderMapper.getByNumber(ordersPaymentDTO.getOrderNumber());
+            if (orders == null) {
+                throw new OrderBusinessException("订单不存在");
+            }
+            Long currentUserId = BaseContext.getCurrentId();
+            if (currentUserId == null || !currentUserId.equals(orders.getUserId())) {
+                throw new OrderBusinessException("不能支付其他用户的订单");
+            }
+            if (!Integer.valueOf(1).equals(ordersPaymentDTO.getPayMethod())) {
+                throw new OrderBusinessException("模拟支付仅支持微信支付");
+            }
+            if (Orders.CANCELLED.equals(orders.getStatus()) || Orders.REFUND.equals(orders.getPayStatus())) {
+                throw new OrderBusinessException("订单已取消或退款，不能支付");
+            }
+            // 重复点击不再更新订单，避免把已接单、已完成的订单改回待接单。
+            if (!Orders.PAID.equals(orders.getPayStatus())) {
+                if (!Orders.PENDING_PAYMENT.equals(orders.getStatus()) || !Orders.UN_PAID.equals(orders.getPayStatus())) {
+                    throw new OrderBusinessException("当前订单状态不允许支付");
+                }
+                paySuccess(orders.getNumber());
+            }
+            return OrderPaymentVO.builder().mockPayment(true).build();
+        }
+
+        // 当前登录用户id
+        Long userId = BaseContext.getCurrentId();
+        User user = userMapper.getById(userId);
+
+        //调用微信支付接口，生成预支付交易单
+        JSONObject jsonObject = weChatPayUtil.pay(
+                ordersPaymentDTO.getOrderNumber(), //商户订单号
+                new BigDecimal(0.01), //支付金额，单位 元
+                "苍穹外卖订单", //商品描述
+                user.getOpenid() //微信用户的openid
+        );
+
+        if (jsonObject.getString("code") != null && jsonObject.getString("code").equals("ORDERPAID")) {
+            throw new OrderBusinessException("该订单已支付");
+        }
+
+        OrderPaymentVO vo = jsonObject.toJavaObject(OrderPaymentVO.class);
+        vo.setPackageStr(jsonObject.getString("package"));
+
+        return vo;
+    }
+
+    /**
+     * 支付成功，修改订单状态
+     *
+     * @param outTradeNo
+     */
+    public void paySuccess(String outTradeNo) {
+
+        // 根据订单号查询订单
+        Orders ordersDB = orderMapper.getByNumber(outTradeNo);
+
+        // 根据订单id更新订单的状态、支付方式、支付状态、结账时间
+        Orders orders = Orders.builder()
+                .id(ordersDB.getId())
+                .status(Orders.TO_BE_CONFIRMED)
+                .payStatus(Orders.PAID)
+                .checkoutTime(LocalDateTime.now())
+                .build();
+
+        orderMapper.update(orders);
+    }
+
 }
