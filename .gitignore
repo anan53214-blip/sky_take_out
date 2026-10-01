@@ -5,3 +5,7 @@
 *Test.java
 **/test/
 /sky-server/src/main/resources/application-dev.yml
+!/sky-server/src/test/
+!/sky-server/src/test/java/com/sky/mapper/OrderMapperTest.java
+!/sky-server/src/test/java/com/sky/service/impl/DeliveryRangeServiceImplTest.java
+!/sky-server/src/test/java/com/sky/service/impl/OrderServiceImplTest.java

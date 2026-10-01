@@ -24,4 +24,32 @@
         </set>
         where id = #{id}
     </update>
+
+
+    <!-- 先分页查询订单基本信息，商品明细由Service另行查询，避免一对多联表影响分页。 -->
+    <select id="pageQuery" resultType="com.sky.entity.Orders">
+        select * from orders
+        <where>
+            <if test="number != null and number != ''">
+                and number like concat('%',#{number},'%')
+            </if>
+            <if test="phone != null and phone != ''">
+                and phone like concat('%',#{phone},'%')
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+            <if test="userId != null">
+                and user_id = #{userId}
+            </if>
+            <!-- 起止时间可分别传入，支持只指定开始时间或结束时间。 -->
+            <if test="beginTime != null">
+                and order_time &gt;= #{beginTime}
+            </if>
+            <if test="endTime != null">
+                and order_time &lt;= #{endTime}
+            </if>
+        </where>
+        order by order_time desc, id desc
+    </select>
 </mapper>

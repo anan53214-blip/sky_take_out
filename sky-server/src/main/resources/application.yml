@@ -35,6 +35,15 @@ logging:
         controller: info
 
 sky:
+  delivery:
+    # 本地学习默认放行：所有地址均视为配送范围内，不请求百度地图，无需 AK。
+    # 只有显式设置 SKY_DELIVERY_RANGE_CHECK_ENABLED=true 才启用真实距离校验。
+    range-check-enabled: ${SKY_DELIVERY_RANGE_CHECK_ENABLED:false}
+    max-distance: ${SKY_DELIVERY_MAX_DISTANCE:5000}
+  shop:
+    address: ${SKY_SHOP_ADDRESS:}
+  baidu:
+    ak: ${SKY_BAIDU_AK:}
   jwt:
     # 设置jwt签名加密时使用的秘钥
     admin-secret-key: itcast

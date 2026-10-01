@@ -42,4 +42,10 @@ public interface ShoppingCartMapper {
     void deleteAll(Long userId);
 
     void deleteById(ShoppingCart shoppingCart);
+
+    /**
+     * 再来一单时批量添加购物车商品
+     * @param shoppingCartList 购物车商品集合
+     */
+    void insertBatch(@Param("shoppingCartList") List<ShoppingCart> shoppingCartList);
 }
