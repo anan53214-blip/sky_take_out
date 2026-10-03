@@ -4,6 +4,7 @@ import com.sky.entity.Orders;
 import com.sky.mapper.OrderMapper;
 import com.sky.mapper.UserMapper;
 import com.sky.service.ReportService;
+import com.sky.vo.OrderReportVO;
 import com.sky.vo.TurnoverReportVO;
 import com.sky.vo.UserReportVO;
 import org.apache.commons.lang3.StringUtils;
@@ -95,5 +96,58 @@ public class ReportServiceImpl implements ReportService {
                 .newUserList(StringUtils.join(newUserList,","))
                 .totalUserList(StringUtils.join(totalUserList,","))
                 .build();
+    }
+
+    /**
+     * 获取指定时间区间的订单数据
+     * @param begin
+     * @param end
+     * @return
+     */
+    public OrderReportVO getOrdersStatistics(LocalDate begin, LocalDate end) {
+        //当前集合用于存放从begin到end范围内的每天的日期
+        List<LocalDate> list=new ArrayList<>();
+        while (!begin.equals(end)){
+            list.add(begin);
+            begin=begin.plusDays(1);
+        }
+        List<Integer> orderCountList =new ArrayList<>();
+        List<Integer> validCountList =new ArrayList<>();
+        for (LocalDate localDate : list) {
+            //查询每日订单总数
+            LocalDateTime beginTime = LocalDateTime.of(localDate, LocalTime.MIN);
+            LocalDateTime endTime = LocalDateTime.of(localDate, LocalTime.MAX);
+            Integer orderCount = getOrderCount(beginTime, endTime, null);
+            //查询每天的有效订单数
+            Integer validCount = getOrderCount(beginTime, endTime, Orders.COMPLETED);
+            orderCountList.add(orderCount);
+            validCountList.add(validCount);
+        }
+
+        //订单总数
+        Integer totalOrderCount = orderCountList.stream().reduce(Integer::sum).get();
+        //有效订单总数
+        Integer totalValidCount = validCountList.stream().reduce(Integer::sum).get();
+        Double orderCompletionRate = 0.0;
+        if(totalOrderCount!=0)
+        {orderCompletionRate = totalValidCount.doubleValue() / totalOrderCount;}
+        return OrderReportVO
+                .builder()
+                .dateList(StringUtils.join(list,","))
+                .orderCountList(StringUtils.join(orderCountList,","))
+                .validOrderCountList(StringUtils.join(validCountList,","))
+                .totalOrderCount(totalOrderCount)
+                .validOrderCount(totalValidCount)
+                .orderCompletionRate(orderCompletionRate)
+                .build();
+    }
+
+    private Integer getOrderCount(LocalDateTime begin,LocalDateTime end,Integer status){
+        Map map=new HashMap();
+        map.put("begin",begin);
+        map.put("end",end);
+        map.put("status",status);
+        Integer count = orderMapper.countByMap(map);
+        return count==null?0:count;
     }
 }
