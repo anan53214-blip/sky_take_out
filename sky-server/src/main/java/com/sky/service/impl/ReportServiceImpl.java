@@ -208,9 +208,9 @@ public class ReportServiceImpl implements ReportService {
                 row.getCell(1).setCellValue(localDate.toString());
                 row.getCell(2).setCellValue(businessDataVO.getTurnover());
                 row.getCell(3).setCellValue(businessDataVO.getValidOrderCount());
-                row.getCell(3).setCellValue(businessDataVO.getOrderCompletionRate());
-                row.getCell(3).setCellValue(businessDataVO.getUnitPrice());
-                row.getCell(3).setCellValue(businessDataVO.getNewUsers());
+                row.getCell(4).setCellValue(businessDataVO.getOrderCompletionRate());
+                row.getCell(5).setCellValue(businessDataVO.getUnitPrice());
+                row.getCell(6).setCellValue(businessDataVO.getNewUsers());
             }
 
             ServletOutputStream out= response.getOutputStream();
